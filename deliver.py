@@ -9,6 +9,7 @@ import os
 import subprocess
 import logging
 import sys
+import time
 
 log = logging.getLogger('deliver')
 log.setLevel(logging.INFO)
@@ -158,6 +159,10 @@ except AssertionError as e:
     log.error("Could not create a delivery project. See exception: {}".format(e))
     sys.exit(1)
 
+log.info("Will now sleep for 1 h and 15 min while waiting for Uppmax to sync the projects from Supr...")
+time.sleep(60*75)
+
+log.info("Waking up, will now try to start to_outbox")
 # Start Mover
 try:
     cmd = ['to_outbox', stage_project_path, supr_name_of_delivery]
