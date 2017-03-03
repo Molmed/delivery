@@ -50,7 +50,7 @@ def create_delivery_project(base_url, project_name, pi_id, user, key):
 
     today = date.today()
     today_formatted = today.strftime(supr_date_format)
-    six_months_from_now = today + relativedelta(months=+6)
+    six_months_from_now = today + relativedelta(months=+3)
     six_months_from_now_formatted = six_months_from_now.strftime(supr_date_format)
 
     payload = {
