@@ -94,6 +94,8 @@ parser.add_argument("-e", "--email", help="Email address to the PI (Must be same
 parser.add_argument("-u", "--supr_url", help="Base url of Supr instance to use", required=True)
 parser.add_argument("-a", "--supr_api_user", help="Supr API user", required=True)
 parser.add_argument("-k", "--supr_api_key", help="Supr API key", required=True)
+parser.add_argument("--path-to-mover", help="Explicit path to the to_outbox executable", required=False,
+                    dest="path_to_mover", default=os.path.join("/usr", "local", "mover", "1.0.0"))
 parser.add_argument("-d", "--debug", help="Get debugg level logging information")
 
 # Require an argument specifying whether data is sensitive
@@ -130,6 +132,11 @@ sensitive_data = args.sensitive
 supr_base_url = args.supr_url
 supr_api_user = args.supr_api_user
 supr_api_key = args.supr_api_key
+
+# Set the path to the executable
+path_to_executable = args.path_to_mover
+if not path_to_executable.endswith("to_outbox"):
+    path_to_executable = os.path.join(path_to_executable, "to_outbox")
 
 # -----------------------------------
 #         Run delivery
@@ -170,10 +177,10 @@ except AssertionError as e:
     log.error("Could not create a delivery project. See exception: {}".format(e))
     sys.exit(1)
 
-log.info("Will now call to_outbox")
+log.info("Will now call {}".format(path_to_executable))
 # Start Mover
 try:
-    cmd = ['to_outbox', stage_project_path, supr_name_of_delivery]
+    cmd = [path_to_executable, stage_project_path, supr_name_of_delivery]
     output = subprocess.check_output(cmd)
     log.info("Successfully ran mover, here is the mover log: \n {}".format(output))
 except subprocess.CalledProcessError as e:
