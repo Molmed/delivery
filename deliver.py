@@ -42,7 +42,7 @@ def search_pi_id_by_email(base_url, email, user, key):
     return matches[0]["id"]
 
 
-def create_delivery_project(base_url, project_name, pi_id, user, key):
+def create_delivery_project(base_url, project_name, pi_id, sensitive_data, user, key):
 
     supr_date_format = '%Y-%m-%d'
 
@@ -65,7 +65,8 @@ def create_delivery_project(base_url, project_name, pi_id, user, key):
         # This field can be used to add any data you like
         'api_opaque_data': '',
         'ngi_ready': False,
-        'ngi_delivery_status': ''
+        'ngi_delivery_status': '',
+        'ngi_sensitive_data': sensitive_data
     }
 
     response = requests.post(create_delivery_project_url,
@@ -95,6 +96,12 @@ parser.add_argument("-a", "--supr_api_user", help="Supr API user", required=True
 parser.add_argument("-k", "--supr_api_key", help="Supr API key", required=True)
 parser.add_argument("-d", "--debug", help="Get debugg level logging information")
 
+# Require an argument specifying whether data is sensitive
+sensitive_args = parser.add_mutually_exclusive_group(required=True)
+sensitive_args.add_argument("--sensitive", action="store_true", help="Project contains sensitive personal data")
+sensitive_args.add_argument("--not-sensitive", action="store_true", help="Project does not contain sensitive "
+                                                                         "personal data")
+
 args = parser.parse_args()
 
 # -----------------------------------
@@ -116,6 +123,9 @@ staging_area = args.staging_area
 
 # Fetch the emails project pi somehow e.g. from a LIMS/StatusDB/Read from file
 pi_email = args.email
+
+# Flag indicating the sensitivity of the data
+sensitive_data = args.sensitive
 
 supr_base_url = args.supr_url
 supr_api_user = args.supr_api_user
@@ -151,6 +161,7 @@ try:
     delivery_project_info = create_delivery_project(base_url=supr_base_url,
                                                     project_name=project,
                                                     pi_id=pi_id,
+                                                    sensitive_data=sensitive_data,
                                                     user=supr_api_user,
                                                     key=supr_api_key)
     supr_name_of_delivery = delivery_project_info['name']
