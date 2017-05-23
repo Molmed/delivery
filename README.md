@@ -21,7 +21,7 @@ Here is an example of how to run the script:
 # You need to be in the python environment in which you installed the
 # script dependencies before you can run it.
 source activate ugc_delivery_script
-python deliver.py --project dummy --path test_delivery/ --staging_area staging_area/ --email 'me@example.com' --supr_url https://disposer.c3se.chalmers.se/supr-test/api --supr_api_user <your api user> --supr_api_key <your api key>
+python deliver.py --project dummy --sensitive --path test_delivery/ --staging_area staging_area/ --email 'me@example.com' --supr_url https://disposer.c3se.chalmers.se/supr-test/api --supr_api_user <your api user> --supr_api_key <your api key>
 ```
 
 Please note that the values here need to be substituted with real values for this to work, and the `supr_url` needs to be pointing to the real supr instance, at https://supr.snic.se/api
