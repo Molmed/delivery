@@ -27,3 +27,5 @@ python deliver.py --project dummy --sensitive --path test_delivery/ --staging_ar
 Please note that the values here need to be substituted with real values for this to work, and the `supr_url` needs to be pointing to the real supr instance, at https://supr.snic.se/api
 
 The `project` parameter decides that base name for the delivery project in Supr, which will be created on the format `DELIVER_<project_name>_<current date>`
+
+Optionally, the `member_email` parameter can be used to specify the email addresses of additional members that should be added to the delivery project at creation-time.

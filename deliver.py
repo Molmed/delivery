@@ -9,7 +9,6 @@ import os
 import subprocess
 import logging
 import sys
-import time
 
 log = logging.getLogger('deliver')
 log.setLevel(logging.INFO)
@@ -27,7 +26,7 @@ def search_pi_id_by_email(base_url, email, user, key):
     response = requests.get(search_person_url, params=params, auth=(user, key))
 
     if response.status_code != 200:
-        raise AssertionError("Status code returned when trying to get PI id for email: "
+        raise AssertionError("Status code returned when trying to get ID for email: "
                              "{} was not 200. Response was: {}".format(email, response.content))
 
     response_as_json = json.loads(response.content)
@@ -37,12 +36,12 @@ def search_pi_id_by_email(base_url, email, user, key):
         raise AssertionError("There were no hits in SUPR for email: {}".format(email))
 
     if len(matches) > 1:
-        raise AssertionError("There we more than one hit in SUPR for email: {}".format(email))
+        raise AssertionError("There was more than one hit in SUPR for email: {}".format(email))
 
     return matches[0]["id"]
 
 
-def create_delivery_project(base_url, project_name, pi_id, sensitive_data, user, key):
+def create_delivery_project(base_url, project_name, pi_id, member_ids, sensitive_data, user, key):
 
     supr_date_format = '%Y-%m-%d'
 
@@ -57,6 +56,7 @@ def create_delivery_project(base_url, project_name, pi_id, sensitive_data, user,
         'ngi_project_name': project_name,
         'title': "DELIVERY_{}_{}".format(project_name, today_formatted),
         'pi_id': pi_id,
+        'member_ids': member_ids,
         'start_date': today_formatted,
         'end_date': six_months_from_now_formatted,
         'continuation_name': '',
@@ -91,6 +91,9 @@ parser.add_argument("-i", "--path", help="Path to the directory to deliver", req
 parser.add_argument("-s", "--staging_area", help="Path to the directory where directory should"
                                                  " be staged prior to delivery", required=True)
 parser.add_argument("-e", "--email", help="Email address to the PI (Must be same as in Supr)", required=True)
+parser.add_argument("-m", "--member_email", required=False, nargs="*",
+                    help="Email address to additional members that should be added to the delivery project in "
+                         "addition to the PI (Must be same as in Supr). Can be specified multiple times")
 parser.add_argument("-u", "--supr_url", help="Base url of Supr instance to use", required=True)
 parser.add_argument("-a", "--supr_api_user", help="Supr API user", required=True)
 parser.add_argument("-k", "--supr_api_key", help="Supr API key", required=True)
@@ -125,6 +128,7 @@ staging_area = args.staging_area
 
 # Fetch the emails project pi somehow e.g. from a LIMS/StatusDB/Read from file
 pi_email = args.email
+member_email = args.member_email or []
 
 # Flag indicating the sensitivity of the data
 sensitive_data = args.sensitive
@@ -144,12 +148,19 @@ if not path_to_executable.endswith("to_outbox"):
 
 log.info("Starting delivery of project: {}".format(project))
 
-pi_id = search_pi_id_by_email(base_url=supr_base_url,
-                              email=pi_email,
-                              user=supr_api_user,
-                              key=supr_api_key)
+pi_member_id = map(
+    lambda email: search_pi_id_by_email(
+        base_url=supr_base_url,
+        email=email,
+        user=supr_api_user,
+        key=supr_api_key),
+    [pi_email] + member_email)
+pi_id = pi_member_id[0]
+member_ids = pi_member_id[1:]
 
 log.info("Found a matching PI for email: {}, with id: {}".format(pi_email, pi_id))
+for i in xrange(len(member_ids)):
+    log.info("Found a matching member for email: {}, with id: {}".format(member_email[i], member_ids[i]))
 
 # Stage the project into a separate folder (this is really optional if you are ok with not
 # being able to access the data after the delivery)
@@ -168,6 +179,7 @@ try:
     delivery_project_info = create_delivery_project(base_url=supr_base_url,
                                                     project_name=project,
                                                     pi_id=pi_id,
+                                                    member_ids=member_ids,
                                                     sensitive_data=sensitive_data,
                                                     user=supr_api_user,
                                                     key=supr_api_key)
