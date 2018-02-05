@@ -41,7 +41,7 @@ def search_pi_id_by_email(base_url, email, user, key):
     return matches[0]["id"]
 
 
-def create_delivery_project(base_url, project_name, pi_id, member_id, sensitive_data, user, key):
+def create_delivery_project(base_url, project_name, pi_id, member_ids, sensitive_data, user, key):
 
     supr_date_format = '%Y-%m-%d'
 
@@ -56,7 +56,7 @@ def create_delivery_project(base_url, project_name, pi_id, member_id, sensitive_
         'ngi_project_name': project_name,
         'title': "DELIVERY_{}_{}".format(project_name, today_formatted),
         'pi_id': pi_id,
-        'member_ids': member_id,
+        'member_ids': member_ids,
         'start_date': today_formatted,
         'end_date': six_months_from_now_formatted,
         'continuation_name': '',
@@ -92,7 +92,7 @@ parser.add_argument("-s", "--staging_area", help="Path to the directory where di
                                                  " be staged prior to delivery", required=True)
 parser.add_argument("-e", "--email", help="Email address to the PI (Must be same as in Supr)", required=True)
 parser.add_argument("-m", "--member_email", required=False, nargs="*",
-                    help="Email address to additional memebers that should be added to the delivery project in "
+                    help="Email address to additional members that should be added to the delivery project in "
                          "addition to the PI (Must be same as in Supr). Can be specified multiple times")
 parser.add_argument("-u", "--supr_url", help="Base url of Supr instance to use", required=True)
 parser.add_argument("-a", "--supr_api_user", help="Supr API user", required=True)
@@ -156,11 +156,11 @@ pi_member_id = map(
         key=supr_api_key),
     [pi_email] + member_email)
 pi_id = pi_member_id[0]
-member_id = pi_member_id[1:]
+member_ids = pi_member_id[1:]
 
 log.info("Found a matching PI for email: {}, with id: {}".format(pi_email, pi_id))
-for i in xrange(len(member_id)):
-    log.info("Found a matching member for email: {}, with id: {}".format(member_email[i], member_id[i]))
+for i in xrange(len(member_ids)):
+    log.info("Found a matching member for email: {}, with id: {}".format(member_email[i], member_ids[i]))
 
 # Stage the project into a separate folder (this is really optional if you are ok with not
 # being able to access the data after the delivery)
@@ -179,7 +179,7 @@ try:
     delivery_project_info = create_delivery_project(base_url=supr_base_url,
                                                     project_name=project,
                                                     pi_id=pi_id,
-                                                    member_id=member_id,
+                                                    member_ids=member_ids,
                                                     sensitive_data=sensitive_data,
                                                     user=supr_api_user,
                                                     key=supr_api_key)
